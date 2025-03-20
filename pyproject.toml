@@ -1,0 +1,43 @@
+[project]
+name = "strats-oanda"
+version = "0.1.0"
+description = "strats-oanda"
+readme = "README.md"
+authors = [
+    { name = "Kazuki Yoshida" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.25.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.9",
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = lint, mypy, py39, py310, py311, py312
+
+[testenv]
+deps = pytest
+commands =
+    pytest tests
+
+[testenv:lint]
+deps = ruff
+commands =
+    ruff check --fix
+    ruff format
+
+[testenv:mypy]
+deps = mypy
+commands = mypy src tests --ignore-missing-imports --strict-optional --disallow-untyped-defs 
+"""
