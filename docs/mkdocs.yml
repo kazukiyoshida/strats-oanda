@@ -1,0 +1,7 @@
+site_name: example
+theme:
+  name: material
+  features:
+      - navigation.tabs
+nav:
+  - Home: index.md
