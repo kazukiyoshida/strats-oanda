@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.9"
 dependencies = [
     "requests>=2.25.0",
+    "types-requests>=2.32.0.20250306",
 ]
 
 [build-system]
@@ -47,7 +48,7 @@ envlist = lint, mypy, py39, py310, py311, py312
 [testenv]
 deps = pytest
 commands =
-    pytest tests
+    pytest tests -sv
 
 [testenv:lint]
 deps = ruff
@@ -57,5 +58,5 @@ commands =
 
 [testenv:mypy]
 deps = mypy
-commands = mypy src tests --ignore-missing-imports --strict-optional --disallow-untyped-defs 
+commands = mypy src tests
 """

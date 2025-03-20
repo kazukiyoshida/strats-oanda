@@ -1,9 +1,10 @@
-from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
+from typing import Optional
 
-from .common import parse_time, TimeInForce, OrderTriggerCondition
+from .common import OrderTriggerCondition, TimeInForce, parse_time
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#ClientExtensions
@@ -19,8 +20,8 @@ class ClientExtensions:
 class TakeProfitDetails:
     price: Decimal
     time_in_force: TimeInForce = TimeInForce.GTC
-    gtd_time: datetime | None = None
-    client_extensions: ClientExtensions | None = None
+    gtd_time: Optional[datetime] = None
+    client_extensions: Optional[ClientExtensions] = None
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#StopLossDetails
@@ -71,7 +72,7 @@ class LimitOrderTransaction(Transaction):
     units: Decimal
     price: Decimal
     time_in_force: TimeInForce
-    gtd_time: datetime
+    gtd_time: Optional[datetime]
     trigger_condition: OrderTriggerCondition
     reason: LimitOrderReason
 
@@ -191,13 +192,9 @@ def parse_order_fill_transaction(data: dict) -> OrderFillTransaction:
         account_balance=Decimal(data["accountBalance"]),
         half_spread_cost=Decimal(data["halfSpreadCost"]),
         reason=OrderFillReason(data["reason"]),
-        trade_opened=parse_trade_open(data["tradeOpened"])
-        if "tradeOpened" in data
-        else None,
+        trade_opened=parse_trade_open(data["tradeOpened"]) if "tradeOpened" in data else None,
         trades_closed=[parse_trade_reduce(x) for x in data["tradeClosed"]]
         if "tradeClosed" in data
         else None,
-        trade_reduced=parse_trade_reduce(data["tradeReduced"])
-        if "tradeReduced" in data
-        else None,
+        trade_reduced=parse_trade_reduce(data["tradeReduced"]) if "tradeReduced" in data else None,
     )

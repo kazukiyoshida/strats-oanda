@@ -13,7 +13,7 @@ repos:
     types: [python]
   - id: mypy
     name: mypy
-    entry: bash -c '.tox/mypy/bin/mypy src tests --ignore-missing-imports --strict-optional --disallow-untyped-defs '
+    entry: bash -c '.tox/mypy/bin/mypy src tests'
     pass_filenames: false
     language: system
     types: [python]

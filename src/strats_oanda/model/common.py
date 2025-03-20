@@ -1,5 +1,5 @@
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
 
 # cf. https://developer.oanda.com/rest-live-v20/order-df/#TimeInForce

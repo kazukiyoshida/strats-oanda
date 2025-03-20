@@ -1,8 +1,9 @@
 # Transaction Stream Endpoints
 # cf. https://developer.oanda.com/rest-live-v20/transaction-ep/
 import json
-import threading
 import queue
+import threading
+
 import requests
 
 from strats_oanda.logger import logger
@@ -54,7 +55,7 @@ class TransactionClient:
                         continue
                     else:
                         logger.warning(
-                            f"Ignored transaction type: {tx_type}, json: {json_str}"
+                            f"Ignored transaction type: {tx_type}, json: {json_str}",
                         )
                         continue
 

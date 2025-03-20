@@ -1,9 +1,10 @@
 # Pricing Stream Endpoints
 # cf. https://developer.oanda.com/rest-live-v20/pricing-ep/
-from queue import Queue
-import requests
 import json
-from threading import Thread, Event
+from queue import Queue
+from threading import Event, Thread
+
+import requests
 
 from strats_oanda.logger import logger
 from strats_oanda.model.pricing import parse_client_price
@@ -22,8 +23,8 @@ class PricingStreamClient:
         self.thread = Thread(target=self._pricing_stream, daemon=True)
 
     @property
-    def is_active(self) -> bool:
-        return self.thread.is_active()
+    def is_alive(self) -> bool:
+        return self.thread.is_alive()
 
     def start(self, queue: Queue):
         self.queue = queue

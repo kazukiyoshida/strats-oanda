@@ -2,13 +2,14 @@
 # cf. https://developer.oanda.com/rest-live-v20/instrument-ep/
 from dataclasses import dataclass
 from datetime import datetime
+
 import requests
 
+from strats_oanda.helper import format_datetime
 from strats_oanda.logger import logger
-from strats_oanda.client.common import format_datetime_for_oanda
 from strats_oanda.model.instrument import (
-    CandlestickGranularity,
     Candlestick,
+    CandlestickGranularity,
     parse_candlestick,
 )
 
@@ -41,7 +42,9 @@ class InstrumentClient:
         self.token = token
 
     def get_candles(
-        self, instrument: str, params: GetCandlesQueryParams
+        self,
+        instrument: str,
+        params: GetCandlesQueryParams,
     ) -> GetCandlesResponse | None:
         url = f"{self.url}/v3/instruments/{instrument}/candles"
         payload = {
@@ -53,11 +56,11 @@ class InstrumentClient:
             "granularity": "M1",
         }
         if params.count is not None:
-            payload["count"] = params.count
+            payload["count"] = str(params.count)
         if params.from_time is not None:
-            payload["from"] = format_datetime_for_oanda(params.from_time)
+            payload["from"] = format_datetime(params.from_time)
         if params.to_time is not None:
-            payload["to"] = format_datetime_for_oanda(params.to_time)
+            payload["to"] = format_datetime(params.to_time)
 
         headers = {
             "Authorization": f"Bearer {self.token}",
@@ -67,6 +70,5 @@ class InstrumentClient:
 
         if res.status_code == 200:
             return parse_get_candles_response(res.json())
-        else:
-            logger.error(f"Error get candles data: {res.status_code} {res.text}")
-            return None
+        logger.error(f"Error get candles data: {res.status_code} {res.text}")
+        return None

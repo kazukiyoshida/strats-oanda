@@ -1,10 +1,10 @@
-from enum import Enum
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 
-from .common import TimeInForce, OrderTriggerCondition
-from .transaction import ClientExtensions, TakeProfitDetails, StopLossDetails
+from .common import OrderTriggerCondition, TimeInForce
+from .transaction import ClientExtensions, StopLossDetails, TakeProfitDetails
 
 
 # cf. https://developer.oanda.com/rest-live-v20/order-df/#OrderType
@@ -39,7 +39,7 @@ class LimitOrderRequest:
     instrument: str
     units: Decimal
     price: Decimal
-    type: str = OrderType.LIMIT
+    type: OrderType = OrderType.LIMIT
     timeInForce: TimeInForce = TimeInForce.GTC
     gtdTime: datetime | None = None
     positionFill: OrderPositionFill = OrderPositionFill.DEFAULT
