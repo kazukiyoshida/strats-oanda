@@ -21,6 +21,24 @@ dev = [
     "mkdocs-material>=9.6.9",
 ]
 
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "D1",    # undocumented
+    "E741",  # Do not use variables named 'I', 'O', or 'l'
+]
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
