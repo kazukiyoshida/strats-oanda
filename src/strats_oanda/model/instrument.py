@@ -44,8 +44,8 @@ class Candlestick:
 def parse_candlestick(data: dict) -> Candlestick:
     return Candlestick(
         time=parse_time(data["time"]),
-        volume=data['volume'],
-        complete=data['complete'],
+        volume=data["volume"],
+        complete=data["complete"],
         bid=parse_candlestick_data(data["bid"]) if "bid" in data else None,
         ask=parse_candlestick_data(data["ask"]) if "ask" in data else None,
         mid=parse_candlestick_data(data["mid"]) if "mid" in data else None,

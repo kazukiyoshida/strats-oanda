@@ -35,12 +35,10 @@ class PricingStreamClient:
 
     def _pricing_stream(self):
         url = f"{self.config.streaming_api_url}/v3/accounts/{self.config.account}/pricing/stream"
-        params = {
-            "instruments": ",".join(self.instruments)
-        }
+        params = {"instruments": ",".join(self.instruments)}
         headers = {
             "Authorization": f"Bearer {self.config.token}",
-            "Accept-Datetime-Format": "RFC3339"
+            "Accept-Datetime-Format": "RFC3339",
         }
         logger.info("start pricing streaming")
         with requests.get(url, headers=headers, params=params, stream=True) as res:
@@ -49,7 +47,7 @@ class PricingStreamClient:
                     logger.info("stop pricing streaming")
                     return
                 if line:
-                    json_str = line.decode('utf-8')
+                    json_str = line.decode("utf-8")
                     if "HEARTBEAT" in json_str:
                         continue
 

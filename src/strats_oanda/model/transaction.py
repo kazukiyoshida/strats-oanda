@@ -52,7 +52,7 @@ class OrderFillReason(Enum):
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillTransaction
-@ dataclass
+@dataclass
 class Transaction:
     id: str
     time: datetime
@@ -65,7 +65,7 @@ class Transaction:
 
 # type = LIMIT_ORDER
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#LimitOrderTransaction
-@ dataclass
+@dataclass
 class LimitOrderTransaction(Transaction):
     instrument: str
     units: Decimal
@@ -96,7 +96,7 @@ def parse_limit_order_transaction(data: dict) -> LimitOrderTransaction:
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#OrderCancelTransaction
-@ dataclass
+@dataclass
 class OrderCancelTransaction(Transaction):
     order_id: str
     reason: OrderCancelReason
@@ -119,7 +119,7 @@ def parse_order_cancel_transaction(data: dict) -> OrderCancelTransaction:
 
 
 # https://developer.oanda.com/rest-live-v20/transaction-df/#TradeOpen
-@ dataclass
+@dataclass
 class TradeOpen:
     trade_id: str
     units: Decimal
@@ -142,7 +142,7 @@ def parse_trade_open(data: dict) -> TradeOpen:
 
 
 # https://developer.oanda.com/rest-live-v20/transaction-df/#TradeReduce
-@ dataclass
+@dataclass
 class TradeReduce:
     trade_id: str
     units: Decimal
@@ -159,7 +159,7 @@ def parse_trade_reduce(data: dict) -> TradeReduce:
 
 
 # https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillTransaction
-@ dataclass
+@dataclass
 class OrderFillTransaction(Transaction):
     order_id: str
     instrument: str
@@ -191,7 +191,13 @@ def parse_order_fill_transaction(data: dict) -> OrderFillTransaction:
         account_balance=Decimal(data["accountBalance"]),
         half_spread_cost=Decimal(data["halfSpreadCost"]),
         reason=OrderFillReason(data["reason"]),
-        trade_opened=parse_trade_open(data["tradeOpened"]) if "tradeOpened" in data else None,
-        trades_closed=[parse_trade_reduce(x) for x in data["tradeClosed"]] if "tradeClosed" in data else None,
-        trade_reduced=parse_trade_reduce(data["tradeReduced"]) if "tradeReduced" in data else None,
+        trade_opened=parse_trade_open(data["tradeOpened"])
+        if "tradeOpened" in data
+        else None,
+        trades_closed=[parse_trade_reduce(x) for x in data["tradeClosed"]]
+        if "tradeClosed" in data
+        else None,
+        trade_reduced=parse_trade_reduce(data["tradeReduced"])
+        if "tradeReduced" in data
+        else None,
     )

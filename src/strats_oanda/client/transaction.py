@@ -6,10 +6,11 @@ import queue
 import requests
 
 from strats_oanda.logger import logger
-from strats_oanda.model.transaction import \
-    parse_limit_order_transaction, \
-    parse_order_cancel_transaction, \
-    parse_order_fill_transaction
+from strats_oanda.model.transaction import (
+    parse_limit_order_transaction,
+    parse_order_cancel_transaction,
+    parse_order_fill_transaction,
+)
 
 
 class TransactionClient:
@@ -52,7 +53,9 @@ class TransactionClient:
                     elif tx_type == "HEARTBEAT":
                         continue
                     else:
-                        logger.warning(f"Ignored transaction type: {tx_type}, json: {json_str}")
+                        logger.warning(
+                            f"Ignored transaction type: {tx_type}, json: {json_str}"
+                        )
                         continue
 
                     self.notification_queue.put(tx)

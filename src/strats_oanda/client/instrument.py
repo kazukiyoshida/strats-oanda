@@ -6,17 +6,21 @@ import requests
 
 from strats_oanda.logger import logger
 from strats_oanda.client.common import format_datetime_for_oanda
-from strats_oanda.model.instrument import CandlestickGranularity, Candlestick, parse_candlestick
+from strats_oanda.model.instrument import (
+    CandlestickGranularity,
+    Candlestick,
+    parse_candlestick,
+)
 
 
-@ dataclass
+@dataclass
 class GetCandlesQueryParams:
     count: int | None = None
     from_time: datetime | None = None
     to_time: datetime | None = None
 
 
-@ dataclass
+@dataclass
 class GetCandlesResponse:
     instrument: str
     granularity: CandlestickGranularity
@@ -36,7 +40,9 @@ class InstrumentClient:
         self.url = url
         self.token = token
 
-    def get_candles(self, instrument: str, params: GetCandlesQueryParams) -> GetCandlesResponse | None:
+    def get_candles(
+        self, instrument: str, params: GetCandlesQueryParams
+    ) -> GetCandlesResponse | None:
         url = f"{self.url}/v3/instruments/{instrument}/candles"
         payload = {
             # PricingComponent
@@ -55,7 +61,7 @@ class InstrumentClient:
 
         headers = {
             "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         res = requests.get(url, headers=headers, params=payload)
 

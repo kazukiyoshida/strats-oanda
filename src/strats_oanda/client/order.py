@@ -7,13 +7,16 @@ from dataclasses import asdict
 
 from strats_oanda.logger import logger
 from strats_oanda.model.order import LimitOrderRequest
-from strats_oanda.model.transaction import \
-    LimitOrderTransaction, parse_limit_order_transaction, \
-    OrderCancelTransaction, parse_order_cancel_transaction
+from strats_oanda.model.transaction import (
+    LimitOrderTransaction,
+    parse_limit_order_transaction,
+    OrderCancelTransaction,
+    parse_order_cancel_transaction,
+)
 from strategy_server.utils.json import JSONEncoder, remove_none
 
 
-@ dataclass
+@dataclass
 class CreateLimitOrderResponse:
     orderCreateTransaction: LimitOrderTransaction
     relatedTransactionIDs: list[str]
@@ -22,13 +25,15 @@ class CreateLimitOrderResponse:
 
 def parse_create_limit_order_response(data: dict) -> CreateLimitOrderResponse:
     return CreateLimitOrderResponse(
-        orderCreateTransaction=parse_limit_order_transaction(data["orderCreateTransaction"]),
+        orderCreateTransaction=parse_limit_order_transaction(
+            data["orderCreateTransaction"]
+        ),
         relatedTransactionIDs=data["relatedTransactionIDs"],
         lastTransactionID=data["lastTransactionID"],
     )
 
 
-@ dataclass
+@dataclass
 class CancelOrderResponse:
     orderCancelTransaction: OrderCancelTransaction
     relatedTransactionIDs: list[str]
@@ -37,7 +42,9 @@ class CancelOrderResponse:
 
 def parse_cancel_order_response(data: dict) -> CancelOrderResponse:
     return CancelOrderResponse(
-        orderCancelTransaction=parse_order_cancel_transaction(data["orderCancelTransaction"]),
+        orderCancelTransaction=parse_order_cancel_transaction(
+            data["orderCancelTransaction"]
+        ),
         relatedTransactionIDs=data["relatedTransactionIDs"],
         lastTransactionID=data["lastTransactionID"],
     )
@@ -50,14 +57,18 @@ class OrderClient:
         self.token = token
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.token}"
+            "Authorization": f"Bearer {self.token}",
         }
 
-    def create_limit_order(self, limit_order: LimitOrderRequest) -> CreateLimitOrderResponse | None:
+    def create_limit_order(
+        self, limit_order: LimitOrderRequest
+    ) -> CreateLimitOrderResponse | None:
         url = f"{self.url}/v3/accounts/{self.account}/orders"
-        req = remove_none({
-            "order": asdict(limit_order),
-        })
+        req = remove_none(
+            {
+                "order": asdict(limit_order),
+            }
+        )
         order_data = json.dumps(req, cls=JSONEncoder)
 
         logger.info(f"create limit order: {order_data}")
