@@ -8,8 +8,8 @@ authors = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "pyyaml>=5.4",
     "requests>=2.25.0",
-    "types-requests>=2.32.0.20250306",
 ]
 
 [build-system]
@@ -57,6 +57,9 @@ commands =
     ruff format
 
 [testenv:mypy]
-deps = mypy
+deps =
+  mypy
+  types-requests
+  types-PyYAML
 commands = mypy src tests
 """
