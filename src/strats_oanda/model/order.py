@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Optional
 
 from .common import OrderTriggerCondition, TimeInForce
 from .transaction import ClientExtensions, StopLossDetails, TakeProfitDetails
@@ -41,12 +42,12 @@ class LimitOrderRequest:
     price: Decimal
     type: OrderType = OrderType.LIMIT
     timeInForce: TimeInForce = TimeInForce.GTC
-    gtdTime: datetime | None = None
+    gtdTime: Optional[datetime] = None
     positionFill: OrderPositionFill = OrderPositionFill.DEFAULT
     triggerCondition: OrderTriggerCondition = OrderTriggerCondition.DEFAULT
-    clientExtensions: ClientExtensions | None = None
-    takeProfitOnFill: TakeProfitDetails | None = None
-    stopLossOnFill: StopLossDetails | None = None
+    clientExtensions: Optional[ClientExtensions] = None
+    takeProfitOnFill: Optional[TakeProfitDetails] = None
+    stopLossOnFill: Optional[StopLossDetails] = None
     # guaranteedStopLossOnFill: GuaranteedStopLossDetails
     # trailingStopLossOnFill: TrailingStopLossDetails
-    tradeClientExtensions: ClientExtensions | None = None
+    tradeClientExtensions: Optional[ClientExtensions] = None

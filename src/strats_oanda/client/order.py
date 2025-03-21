@@ -2,6 +2,7 @@
 # cf. https://developer.oanda.com/rest-live-v20/order-ep/
 import json
 from dataclasses import asdict, dataclass
+from typing import Optional
 
 import requests
 
@@ -63,7 +64,7 @@ class OrderClient:
     def create_limit_order(
         self,
         limit_order: LimitOrderRequest,
-    ) -> CreateLimitOrderResponse | None:
+    ) -> Optional[CreateLimitOrderResponse]:
         url = f"{self.url}/v3/accounts/{self.account}/orders"
         req = remove_none(
             {
@@ -82,7 +83,7 @@ class OrderClient:
         logger.error(f"Error creating order: {res.status_code} {res.text}")
         return None
 
-    def cancel_limit_order(self, order_id: str) -> CancelOrderResponse | None:
+    def cancel_limit_order(self, order_id: str) -> Optional[CancelOrderResponse]:
         url = f"{self.url}/v3/accounts/{self.account}/orders/{order_id}/cancel"
 
         logger.info(f"cancel order: {order_id=}")

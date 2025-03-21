@@ -2,6 +2,7 @@
 # cf. https://developer.oanda.com/rest-live-v20/instrument-ep/
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import requests
 
@@ -16,9 +17,9 @@ from strats_oanda.model.instrument import (
 
 @dataclass
 class GetCandlesQueryParams:
-    count: int | None = None
-    from_time: datetime | None = None
-    to_time: datetime | None = None
+    count: Optional[int] = None
+    from_time: Optional[datetime] = None
+    to_time: Optional[datetime] = None
 
 
 @dataclass
@@ -45,7 +46,7 @@ class InstrumentClient:
         self,
         instrument: str,
         params: GetCandlesQueryParams,
-    ) -> GetCandlesResponse | None:
+    ) -> Optional[GetCandlesResponse]:
         url = f"{self.url}/v3/instruments/{instrument}/candles"
         payload = {
             # PricingComponent

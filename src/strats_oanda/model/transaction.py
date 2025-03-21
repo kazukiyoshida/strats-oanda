@@ -27,11 +27,11 @@ class TakeProfitDetails:
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#StopLossDetails
 @dataclass
 class StopLossDetails:
-    price: Decimal | None = None
-    distance: Decimal | None = None
+    price: Optional[Decimal] = None
+    distance: Optional[Decimal] = None
     time_in_force: TimeInForce = TimeInForce.GTC
-    gtd_time: datetime | None = None
-    client_extensions: ClientExtensions | None = None
+    gtd_time: Optional[datetime] = None
+    client_extensions: Optional[ClientExtensions] = None
 
 
 # https://developer.oanda.com/rest-live-v20/transaction-df/#LimitOrderReason
@@ -101,8 +101,8 @@ def parse_limit_order_transaction(data: dict) -> LimitOrderTransaction:
 class OrderCancelTransaction(Transaction):
     order_id: str
     reason: OrderCancelReason
-    client_order_id: str | None = None
-    replaced_by_order_id: str | None = None
+    client_order_id: Optional[str] = None
+    replaced_by_order_id: Optional[str] = None
 
 
 def parse_order_cancel_transaction(data: dict) -> OrderCancelTransaction:
@@ -129,7 +129,7 @@ class TradeOpen:
     # quoteGuaranteedExecutionFee: Decimal
     half_spread_cost: Decimal
     initial_margin_required: Decimal
-    client_extensions: ClientExtensions | None = None
+    client_extensions: Optional[ClientExtensions] = None
 
 
 def parse_trade_open(data: dict) -> TradeOpen:
@@ -169,10 +169,10 @@ class OrderFillTransaction(Transaction):
     account_balance: Decimal
     half_spread_cost: Decimal
     reason: OrderFillReason
-    client_order_id: str | None = None
-    trade_opened: TradeOpen | None = None
-    trades_closed: list[TradeReduce] | None = None
-    trade_reduced: TradeReduce | None = None
+    client_order_id: Optional[str] = None
+    trade_opened: Optional[TradeOpen] = None
+    trades_closed: Optional[list[TradeReduce]] = None
+    trade_reduced: Optional[TradeReduce] = None
 
 
 def parse_order_fill_transaction(data: dict) -> OrderFillTransaction:

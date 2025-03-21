@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Optional
 
 from .common import parse_time
 
@@ -36,9 +37,9 @@ class Candlestick:
     time: datetime
     volume: int
     complete: bool
-    bid: CandlestickData | None = None
-    ask: CandlestickData | None = None
-    mid: CandlestickData | None = None
+    bid: Optional[CandlestickData] = None
+    ask: Optional[CandlestickData] = None
+    mid: Optional[CandlestickData] = None
 
 
 def parse_candlestick(data: dict) -> Candlestick:
