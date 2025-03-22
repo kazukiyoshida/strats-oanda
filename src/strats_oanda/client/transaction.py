@@ -1,12 +1,15 @@
-# Transaction Stream Endpoints
-# cf. https://developer.oanda.com/rest-live-v20/transaction-ep/
+"""
+Transaction Stream Endpoints
+cf. https://developer.oanda.com/rest-live-v20/transaction-ep/
+"""
+
 import json
-import queue
 import threading
+from queue import Queue
 
 import requests
 
-from strats_oanda.logger import logger
+from strats_oanda.config import get_config
 from strats_oanda.model.transaction import (
     parse_limit_order_transaction,
     parse_order_cancel_transaction,
@@ -15,30 +18,33 @@ from strats_oanda.model.transaction import (
 
 
 class TransactionClient:
-    def __init__(self, url, account, token, notification_queue: queue.Queue):
-        self.url = url
-        self.account = account
-        self.token = token
-        self.notification_queue = notification_queue
-        self.thread = threading.Thread(target=self._transaction_stream, daemon=True)
+    def __init__(self):
+        self.config = get_config()
         self.stop_event = threading.Event()
+        self.thread = threading.Thread(target=self._transaction_stream, daemon=True)
 
-    def start_transaction_stream(self):
-        self.thread.start()
+    @property
+    def is_alive(self) -> bool:
+        return self.thread.is_alive()
 
-    def stop_transaction_stream(self):
-        self.stop_event.set()
+    def start(self, queue: Queue):
+        if not self.is_alive:
+            self.queue = queue
+            self.thread.start()
+
+    def stop(self):
+        if self.is_alive:
+            self.stop_event.set()
+            self.thread.join()
 
     def _transaction_stream(self):
         url = f"{self.url}/v3/accounts/{self.account}/transactions/stream"
         headers = {
             "Authorization": f"Bearer {self.token}",
         }
-        logger.info("start transaction streaming")
         with requests.get(url, headers=headers, stream=True) as res:
             for line in res.iter_lines():
                 if self.stop_event.is_set():
-                    logger.info("stop transaction streaming")
                     return
                 if line:
                     json_str = line.decode("utf-8")
@@ -54,9 +60,6 @@ class TransactionClient:
                     elif tx_type == "HEARTBEAT":
                         continue
                     else:
-                        logger.warning(
-                            f"Ignored transaction type: {tx_type}, json: {json_str}",
-                        )
                         continue
 
                     self.notification_queue.put(tx)
