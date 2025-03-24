@@ -67,6 +67,10 @@ class OANDAConfig:
     def is_configured(self):
         return self._initialized
 
+    @property
+    def account_streaming_url(self) -> str:
+        return f"{self.streaming_url}/v3/accounts/{self.account}"
+
 
 _config = OANDAConfig()
 

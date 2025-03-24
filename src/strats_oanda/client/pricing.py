@@ -5,15 +5,19 @@ cf. https://developer.oanda.com/rest-live-v20/pricing-ep/
 
 import asyncio
 import json
+import logging
 from collections.abc import AsyncGenerator
 
 import aiohttp
+from strats.exchange import StreamClient
 
 from strats_oanda.config import get_config
 from strats_oanda.model.pricing import ClientPrice, parse_client_price
 
+logger = logging.getLogger(__name__)
 
-class PricingStreamClient:
+
+class PricingStreamClient(StreamClient):
     def __init__(self, instruments: list[str]):
         if not isinstance(instruments, list):
             raise ValueError(f"instruments must be list: {instruments}")
@@ -21,7 +25,7 @@ class PricingStreamClient:
         self.instruments = instruments
 
     async def stream(self, stop_event: asyncio.Event) -> AsyncGenerator[ClientPrice]:
-        url = f"{self.config.streaming_url}/v3/accounts/{self.config.account}/pricing/stream"
+        url = f"{self.config.account_streaming_url}/pricing/stream"
         params = {"instruments": ",".join(self.instruments)}
         headers = {
             "Authorization": f"Bearer {self.config.token}",
@@ -51,7 +55,8 @@ class PricingStreamClient:
                     if next_line_task in done:
                         try:
                             line_bytes = next_line_task.result()
-                        except (StopAsyncIteration, asyncio.CancelledError):
+                        except (StopAsyncIteration, asyncio.CancelledError) as e:
+                            logger.error(f"async iteration stopped or canceled. {e}")
                             break
 
                         line = line_bytes.decode("utf-8").strip()
@@ -61,5 +66,6 @@ class PricingStreamClient:
                         try:
                             data = json.loads(line)
                             yield parse_client_price(data)
-                        except Exception:
+                        except Exception as e:
+                            logger.error(f"failed to parse message. err={e}, line={line}")
                             continue
