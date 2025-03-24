@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from .common import parse_time
+from ..helper import parse_time
 
 
 # https://developer.oanda.com/rest-live-v20/pricing-common-df/#PriceBucket

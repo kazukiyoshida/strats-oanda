@@ -1,4 +1,3 @@
-from datetime import datetime
 from enum import Enum
 
 
@@ -12,8 +11,3 @@ class TimeInForce(Enum):
 class OrderTriggerCondition(Enum):
     DEFAULT = "DEFAULT"
     # ...
-
-
-def parse_time(time: str) -> datetime:
-    time_str = time.replace("Z", "+00:00")
-    return datetime.fromisoformat(time_str)

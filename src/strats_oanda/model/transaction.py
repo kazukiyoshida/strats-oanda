@@ -4,7 +4,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from .common import OrderTriggerCondition, TimeInForce, parse_time
+from ..helper import parse_time
+from .common import OrderTriggerCondition, TimeInForce
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#ClientExtensions
