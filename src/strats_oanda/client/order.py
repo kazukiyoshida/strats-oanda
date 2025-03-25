@@ -10,6 +10,7 @@ from typing import Optional
 
 import aiohttp
 
+from strats_oanda.config import get_config
 from strats_oanda.helper import JSONEncoder, remove_none
 from strats_oanda.model.order import LimitOrderRequest
 from strats_oanda.model.transaction import (
@@ -53,20 +54,18 @@ def parse_cancel_order_response(data: dict) -> CancelOrderResponse:
 
 
 class OrderClient:
-    def __init__(self, url: str, account: str, token: str):
-        self.url = url
-        self.account = account
-        self.token = token
+    def __init__(self):
+        self.config = get_config()
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.token}",
+            "Authorization": f"Bearer {self.config.token}",
         }
 
     async def create_limit_order(
         self,
         limit_order: LimitOrderRequest,
     ) -> Optional[CreateLimitOrderResponse]:
-        url = f"{self.url}/v3/accounts/{self.account}/orders"
+        url = f"{self.config.account_rest_url}/orders"
         req = remove_none({"order": asdict(limit_order)})
         order_data = json.dumps(req, cls=JSONEncoder)
 
@@ -84,7 +83,7 @@ class OrderClient:
                     return None
 
     async def cancel_limit_order(self, order_id: str) -> Optional[CancelOrderResponse]:
-        url = f"{self.url}/v3/accounts/{self.account}/orders/{order_id}/cancel"
+        url = f"{self.config.account_rest_url}/orders/{order_id}/cancel"
 
         logger.info(f"cancel order: {order_id=}")
 

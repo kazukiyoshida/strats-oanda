@@ -68,6 +68,10 @@ class OANDAConfig:
         return self._initialized
 
     @property
+    def account_rest_url(self) -> str:
+        return f"{self.rest_url}/v3/accounts/{self.account}"
+
+    @property
     def account_streaming_url(self) -> str:
         return f"{self.streaming_url}/v3/accounts/{self.account}"
 
