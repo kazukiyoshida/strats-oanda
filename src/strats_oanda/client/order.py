@@ -15,9 +15,12 @@ from strats_oanda.helper import JSONEncoder, remove_none
 from strats_oanda.model import (
     CancelOrderResponse,
     CreateLimitOrderResponse,
+    CreateMarketOrderResponse,
     LimitOrderRequest,
+    MarketOrderRequest,
     parse_cancel_order_response,
     parse_create_limit_order_response,
+    parse_create_market_order_response,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,6 +33,27 @@ class OrderClient:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.config.token}",
         }
+
+    async def create_market_order(
+        self,
+        market_order: MarketOrderRequest,
+    ) -> Optional[CreateMarketOrderResponse]:
+        url = f"{self.config.account_rest_url}/orders"
+        req = remove_none({"order": asdict(market_order)})
+        order_data = json.dumps(req, cls=JSONEncoder)
+
+        logger.info(f"create market order: {order_data}")
+
+        async with aiohttp.ClientSession(headers=self.headers) as session:
+            async with session.post(url, data=order_data) as res:
+                if res.status == 201:
+                    data = await res.json()
+                    logger.info(f"create market order success: {data}")
+                    return parse_create_market_order_response(data)
+                else:
+                    text = await res.text()
+                    logger.error(f"error creating market order: {res.status} {text}")
+                    return None
 
     async def create_limit_order(
         self,
@@ -49,7 +73,7 @@ class OrderClient:
                     return parse_create_limit_order_response(data)
                 else:
                     text = await res.text()
-                    logger.error(f"Error creating order: {res.status} {text}")
+                    logger.error(f"error creating limit order: {res.status} {text}")
                     return None
 
     async def cancel_limit_order(self, order_id: str) -> Optional[CancelOrderResponse]:
@@ -65,5 +89,5 @@ class OrderClient:
                     return parse_cancel_order_response(data)
                 else:
                     text = await res.text()
-                    logger.error(f"Error canceling order: {res.status} {text}")
+                    logger.error(f"error canceling order: {res.status} {text}")
                     return None
