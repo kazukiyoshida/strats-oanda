@@ -4,18 +4,31 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from .common import OrderTriggerCondition, TimeInForce
-from .transaction import ClientExtensions, StopLossDetails, TakeProfitDetails
+from .common import OrderPositionFill, OrderTriggerCondition, TimeInForce
+from .transaction import (
+    ClientExtensions,
+    LimitOrderTransaction,
+    MarketOrderTransaction,
+    OrderCancelTransaction,
+    StopLossDetails,
+    TakeProfitDetails,
+    parse_limit_order_transaction,
+    parse_market_order_transaction,
+    parse_order_cancel_transaction,
+)
 
 
 # cf. https://developer.oanda.com/rest-live-v20/order-df/#OrderType
 class OrderType(Enum):
+    MARKET = "MARKET"
     LIMIT = "LIMIT"
-
-    # When the last traded price touches the trigger price,
-    # the take profit order will execute immediately as a market order
-    # cf. https://support.kraken.com/hc/en-us/articles/8407751019284-Take-profit-orders
+    STOP = "STOP"
+    MARKET_IF_TOUCHED = "MARKET_IF_TOUCHED"
     TAKE_PROFIT = "TAKE_PROFIT"
+    STOP_LOSS = "STOP_LOSS"
+    GUARANTEED_STOP_LOSS = "GUARANTEED_STOP_LOSS"
+    TRAILING_STOP_LOSS = "TRAILING_STOP_LOSS"
+    FIXED_PRICE = "FIXED_PRICE"
 
 
 # cf. https://developer.oanda.com/rest-live-v20/order-df/#OrderState
@@ -26,12 +39,21 @@ class OrderState(Enum):
     CANCELLED = "CANCELLED"
 
 
-# cf. https://developer.oanda.com/rest-live-v20/order-df/#OrderPositionFill
-class OrderPositionFill(Enum):
-    OPEN_ONLY = "OPEN_ONLY"
-    REDUCE_FIRST = "REDUCE_FIRST"
-    REDUCE_ONLY = "REDUCE_ONLY"
-    DEFAULT = "DEFAULT"
+# cf. https://developer.oanda.com/rest-live-v20/order-df/#MarketOrderRequest
+@dataclass
+class MarketOrderRequest:
+    instrument: str
+    units: Decimal
+    type: OrderType = OrderType.LIMIT
+    time_in_force: TimeInForce = TimeInForce.FOK
+    price_bound: Optional[Decimal] = None
+    position_fill: OrderPositionFill = OrderPositionFill.DEFAULT
+    client_extensions: Optional[ClientExtensions] = None
+    take_profit_on_fill: Optional[TakeProfitDetails] = None
+    stop_loss_on_fill: Optional[StopLossDetails] = None
+    # guaranteed_stop_loss_on_fill: GuaranteedStopLossDetails
+    # trailing_stop_loss_on_fill: TrailingStopLossDetails
+    trade_client_extensions: Optional[ClientExtensions] = None
 
 
 # cf. https://developer.oanda.com/rest-live-v20/order-df/#LimitOrderRequest
@@ -41,13 +63,62 @@ class LimitOrderRequest:
     units: Decimal
     price: Decimal
     type: OrderType = OrderType.LIMIT
-    timeInForce: TimeInForce = TimeInForce.GTC
-    gtdTime: Optional[datetime] = None
-    positionFill: OrderPositionFill = OrderPositionFill.DEFAULT
-    triggerCondition: OrderTriggerCondition = OrderTriggerCondition.DEFAULT
-    clientExtensions: Optional[ClientExtensions] = None
-    takeProfitOnFill: Optional[TakeProfitDetails] = None
-    stopLossOnFill: Optional[StopLossDetails] = None
-    # guaranteedStopLossOnFill: GuaranteedStopLossDetails
-    # trailingStopLossOnFill: TrailingStopLossDetails
-    tradeClientExtensions: Optional[ClientExtensions] = None
+    time_in_force: TimeInForce = TimeInForce.GTC
+    gtd_time: Optional[datetime] = None
+    position_fill: OrderPositionFill = OrderPositionFill.DEFAULT
+    trigger_condition: OrderTriggerCondition = OrderTriggerCondition.DEFAULT
+    client_extensions: Optional[ClientExtensions] = None
+    take_profit_on_fill: Optional[TakeProfitDetails] = None
+    stop_loss_on_fill: Optional[StopLossDetails] = None
+    # guaranteed_stop_loss_on_fill: GuaranteedStopLossDetails
+    # trailing_stop_loss_on_fill: TrailingStopLossDetails
+    trade_client_extensions: Optional[ClientExtensions] = None
+
+
+# cf. https://developer.oanda.com/rest-live-v20/order-ep/
+@dataclass
+class CreateOrderResponse:
+    related_transaction_ids: list[str]
+    last_transaction_id: str
+
+
+# cf. https://developer.oanda.com/rest-live-v20/order-ep/
+@dataclass
+class CreateMarketOrderResponse(CreateOrderResponse):
+    order_create_transaction: MarketOrderTransaction
+
+
+def parse_create_market_order_response(data: dict) -> CreateMarketOrderResponse:
+    return CreateMarketOrderResponse(
+        order_create_transaction=parse_market_order_transaction(data["orderCreateTransaction"]),
+        related_transaction_ids=data["relatedTransactionIDs"],
+        last_transaction_id=data["lastTransactionID"],
+    )
+
+
+# cf. https://developer.oanda.com/rest-live-v20/order-ep/
+@dataclass
+class CreateLimitOrderResponse(CreateOrderResponse):
+    order_create_transaction: LimitOrderTransaction
+
+
+def parse_create_limit_order_response(data: dict) -> CreateLimitOrderResponse:
+    return CreateLimitOrderResponse(
+        order_create_transaction=parse_limit_order_transaction(data["orderCreateTransaction"]),
+        related_transaction_ids=data["relatedTransactionIDs"],
+        last_transaction_id=data["lastTransactionID"],
+    )
+
+
+# cf. https://developer.oanda.com/rest-live-v20/order-ep/
+@dataclass
+class CancelOrderResponse(CreateOrderResponse):
+    order_cancel_transaction: OrderCancelTransaction
+
+
+def parse_cancel_order_response(data: dict) -> CancelOrderResponse:
+    return CancelOrderResponse(
+        order_cancel_transaction=parse_order_cancel_transaction(data["orderCancelTransaction"]),
+        related_transaction_ids=data["relatedTransactionIDs"],
+        last_transaction_id=data["lastTransactionID"],
+    )

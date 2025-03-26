@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Optional
 
 from ..helper import parse_time
-from .common import OrderTriggerCondition, TimeInForce
+from .common import OrderPositionFill, OrderTriggerCondition, TimeInForce
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#ClientExtensions
@@ -35,6 +35,15 @@ class StopLossDetails:
     client_extensions: Optional[ClientExtensions] = None
 
 
+# https://developer.oanda.com/rest-live-v20/transaction-df/#MarketOrderReason
+class MarketOrderReason(Enum):
+    CLIENT_ORDER = "CLIENT_ORDER"
+    TRADE_CLOSE = "TRADE_CLOSE"
+    POSITION_CLOSEOUT = "POSITION_CLOSEOUT"
+    MARGIN_CLOSEOUT = "MARGIN_CLOSEOUT"
+    DELAYED_TRADE_CLOSEOUT = "DELAYED_TRADE_CLOSEOUT"
+
+
 # https://developer.oanda.com/rest-live-v20/transaction-df/#LimitOrderReason
 class LimitOrderReason(Enum):
     CLIENT_ORDER = "CLIENT_ORDER"
@@ -53,6 +62,21 @@ class OrderFillReason(Enum):
     # ...
 
 
+# cf. https://developer.oanda.com/rest-live-v20/transaction-df/#MarketOrderTradeClose
+@dataclass
+class MarketOrderTradeClose:
+    trade_id: str
+    client_trade_id: str
+    units: Decimal
+
+
+# cf. https://developer.oanda.com/rest-live-v20/transaction-df/#MarketOrderPositionCloseout
+@dataclass
+class MarketOrderPositionCloseout:
+    instrument: str
+    units: Decimal
+
+
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillTransaction
 @dataclass
 class Transaction:
@@ -63,6 +87,46 @@ class Transaction:
     batch_id: str
     type: str
     request_id: str  # allow empty string
+
+
+# type = MARKET_ORDER
+# cf. https://developer.oanda.com/rest-live-v20/transaction-df/#MarketOrderTransaction
+@dataclass
+class MarketOrderTransaction(Transaction):
+    instrument: str
+    units: Decimal
+    time_in_force: TimeInForce
+    price_bound: Decimal
+    reason: MarketOrderReason
+    position_fill: OrderPositionFill = OrderPositionFill.DEFAULT
+    trade_close: Optional[MarketOrderTradeClose] = None
+    long_position_closeout: Optional[MarketOrderPositionCloseout] = None
+    short_position_closeout: Optional[MarketOrderPositionCloseout] = None
+    # margin_closeout: Optional[] = None
+    # delayed_trade_close: Optional[] = None
+    client_extensions: Optional[ClientExtensions] = None
+    trade_client_extensions: Optional[ClientExtensions] = None
+    # take_profit_on_fill
+    # stop_loss_on_fill
+    # trailing_stop_loss_on_fill
+    # guarantee_stop_loss_on_fill
+
+
+def parse_market_order_transaction(data: dict) -> MarketOrderTransaction:
+    return MarketOrderTransaction(
+        id=data["id"],
+        time=parse_time(data["time"]),
+        user_id=data["userID"],
+        account_id=data["accountID"],
+        batch_id=data["batchID"],
+        request_id=data["requestID"],
+        type=data["type"],
+        instrument=data["instrument"],
+        units=Decimal(data["units"]),
+        time_in_force=TimeInForce(data["timeInForce"]),
+        price_bound=Decimal(data["price_bound"]),
+        reason=MarketOrderReason(data["reason"]),
+    )
 
 
 # type = LIMIT_ORDER
