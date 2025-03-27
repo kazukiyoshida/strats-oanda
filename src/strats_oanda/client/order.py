@@ -3,6 +3,7 @@ Order Endpoints Client
 cf. https://developer.oanda.com/rest-live-v20/order-ep/
 """
 
+import asyncio
 import json
 import logging
 from dataclasses import asdict
@@ -44,16 +45,27 @@ class OrderClient:
 
         logger.info(f"create market order: {order_data}")
 
-        async with aiohttp.ClientSession(headers=self.headers) as session:
-            async with session.post(url, data=order_data) as res:
-                if res.status == 201:
-                    data = await res.json()
-                    logger.info(f"create market order success: {data}")
-                    return parse_create_market_order_response(data)
-                else:
-                    text = await res.text()
-                    logger.error(f"error creating market order: {res.status} {text}")
-                    return None
+        try:
+            async with aiohttp.ClientSession(headers=self.headers) as session:
+                async with session.post(url, data=order_data) as res:
+                    if res.status == 201:
+                        data = await res.json()
+                        logger.info(f"create market order success: {data}")
+                        try:
+                            return parse_create_market_order_response(data)
+                        except Exception as e:
+                            logger.exception(f"Failed to parse market order response: {e}")
+                            return None
+                    else:
+                        text = await res.text()
+                        logger.error(f"error creating market order: {res.status} {text}")
+                        return None
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            logger.exception(f"HTTP request failed: {e}")
+            return None
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+            return None
 
     async def create_limit_order(
         self,
