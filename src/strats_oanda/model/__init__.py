@@ -18,9 +18,13 @@ from .order import parse_create_market_order_response as parse_create_market_ord
 from .pricing import ClientPrice as ClientPrice
 from .pricing import PriceBucket as PriceBucket
 from .pricing import PricingHeartbeat as PricingHeartbeat
+from .pricing import parse_client_price as parse_client_price
+from .pricing import parse_price_bucket as parse_price_bucket
 from .transaction import ClientExtensions as ClientExtensions
 from .transaction import LimitOrderReason as LimitOrderReason
 from .transaction import LimitOrderTransaction as LimitOrderTransaction
+from .transaction import MarketOrderReason as MarketOrderReason
+from .transaction import MarketOrderTransaction as MarketOrderTransaction
 from .transaction import OrderCancelReason as OrderCancelReason
 from .transaction import OrderCancelTransaction as OrderCancelTransaction
 from .transaction import OrderFillReason as OrderFillReason

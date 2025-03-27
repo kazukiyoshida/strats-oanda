@@ -157,8 +157,8 @@ class MarketOrderTransaction(Transaction):
     instrument: str
     units: Decimal
     time_in_force: TimeInForce
-    price_bound: Decimal
     reason: MarketOrderReason
+    price_bound: Optional[Decimal] = None
     position_fill: OrderPositionFill = OrderPositionFill.DEFAULT
     trade_close: Optional[MarketOrderTradeClose] = None
     long_position_closeout: Optional[MarketOrderPositionCloseout] = None
@@ -185,7 +185,7 @@ def parse_market_order_transaction(data: dict) -> MarketOrderTransaction:
         instrument=data["instrument"],
         units=Decimal(data["units"]),
         time_in_force=TimeInForce(data["timeInForce"]),
-        price_bound=Decimal(data["price_bound"]),
+        price_bound=Decimal(data["price_bound"]) if "price_bound" in data else None,
         reason=MarketOrderReason(data["reason"]),
     )
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from strats_oanda.model.pricing import ClientPrice, PriceBucket, parse_client_price
+from strats_oanda.model import ClientPrice, PriceBucket, parse_client_price
 
 
 def test_parse_client_price():
