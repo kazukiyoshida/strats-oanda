@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from ..helper import parse_time
 
@@ -23,9 +24,9 @@ def parse_price_bucket(data: dict) -> PriceBucket:
 @dataclass
 class ClientPrice:
     type: str
-    instrument: str
-    time: datetime
-    tradeable: bool
+    instrument: Optional[str]
+    timestamp: datetime
+    tradeable: Optional[bool]
     bids: list[PriceBucket]
     asks: list[PriceBucket]
     closeout_bid: Decimal
@@ -34,10 +35,10 @@ class ClientPrice:
 
 def parse_client_price(data: dict) -> ClientPrice:
     return ClientPrice(
-        type=data["type"],
-        instrument=data["instrument"],
-        time=parse_time(data["time"]),
-        tradeable=data["tradeable"],
+        type=data["type"] if "type" in data else "PRICE",
+        instrument=data["instrument"] if "instrument" in data else None,
+        timestamp=parse_time(data["timestamp"]),
+        tradeable=data["tradeable"] if "tradeable" in data else None,
         bids=[parse_price_bucket(x) for x in data["bids"]],
         asks=[parse_price_bucket(x) for x in data["asks"]],
         closeout_bid=Decimal(data["closeoutBid"]),

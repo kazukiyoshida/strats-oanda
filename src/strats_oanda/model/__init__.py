@@ -1,3 +1,4 @@
+from .common import HomeConversionFactors as HomeConversionFactors
 from .common import OrderPositionFill as OrderPositionFill
 from .common import OrderTriggerCondition as OrderTriggerCondition
 from .common import TimeInForce as TimeInForce
@@ -29,3 +30,4 @@ from .transaction import TakeProfitDetails as TakeProfitDetails
 from .transaction import TradeOpen as TradeOpen
 from .transaction import TradeReduce as TradeReduce
 from .transaction import Transaction as Transaction
+from .transaction import parse_order_fill_transaction as parse_order_fill_transaction

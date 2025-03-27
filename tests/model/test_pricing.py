@@ -7,7 +7,7 @@ from strats_oanda.model.pricing import ClientPrice, PriceBucket, parse_client_pr
 def test_parse_client_price():
     data = {
         "type": "PRICE",
-        "time": "2025-03-24T15:34:25.366624289Z",
+        "timestamp": "2025-03-24T15:34:25.366624289Z",
         "bids": [
             {"price": "150.693", "liquidity": 250000},
         ],
@@ -23,7 +23,7 @@ def test_parse_client_price():
     expect = ClientPrice(
         type="PRICE",
         instrument="USD_JPY",
-        time=datetime(2025, 3, 24, 15, 34, 25, 366624, tzinfo=timezone.utc),
+        timestamp=datetime(2025, 3, 24, 15, 34, 25, 366624, tzinfo=timezone.utc),
         tradeable=True,
         bids=[
             PriceBucket(

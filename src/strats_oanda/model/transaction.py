@@ -5,7 +5,14 @@ from enum import Enum
 from typing import Optional
 
 from ..helper import parse_time
-from .common import OrderPositionFill, OrderTriggerCondition, TimeInForce
+from .common import (
+    HomeConversionFactors,
+    OrderPositionFill,
+    OrderTriggerCondition,
+    TimeInForce,
+    parse_home_conversion_factors,
+)
+from .pricing import ClientPrice, parse_client_price
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#ClientExtensions
@@ -59,7 +66,21 @@ class OrderCancelReason(Enum):
 # https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillReason
 class OrderFillReason(Enum):
     LIMIT_ORDER = "LIMIT_ORDER"
-    # ...
+    STOP_ORDER = "STOP_ORDER"
+    MARKET_IF_TOUCHED_ORDER = "MARKET_IF_TOUCHED_ORDER"
+    TAKE_PROFIT_ORDER = "TAKE_PROFIT_ORDER"
+    STOP_LOSS_ORDER = "STOP_LOSS_ORDER"
+    GUARANTEED_STOP_LOSS_ORDER = "GUARANTEED_STOP_LOSS_ORDER"
+    TRAILING_STOP_LOSS_ORDER = "TRAILING_STOP_LOSS_ORDER"
+    MARKET_ORDER = "MARKET_ORDER"
+    MARKET_ORDER_TRADE_CLOSE = "MARKET_ORDER_TRADE_CLOSE"
+    MARKET_ORDER_POSITION_CLOSEOUT = "MARKET_ORDER_POSITION_CLOSEOUT"
+    MARKET_ORDER_MARGIN_CLOSEOUT = "MARKET_ORDER_MARGIN_CLOSEOUT"
+    MARKET_ORDER_DELAYED_TRADE_CLOSE = "MARKET_ORDER_DELAYED_TRADE_CLOSE"
+    FIXED_PRICE_ORDER = "FIXED_PRICE_ORDER"
+    FIXED_PRICE_ORDER_PLATFORM_ACCOUNT_MIGRATION = "FIXED_PRICE_ORDER_PLATFORM_ACCOUNT_MIGRATION"
+    FIXED_PRICE_ORDER_DIVISION_ACCOUNT_MIGRATION = "FIXED_PRICE_ORDER_DIVISION_ACCOUNT_MIGRATION"
+    FIXED_PRICE_ORDER_ADMINISTRATIVE_ACTION = "FIXED_PRICE_ORDER_ADMINISTRATIVE_ACTION"
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#MarketOrderTradeClose
@@ -75,6 +96,46 @@ class MarketOrderTradeClose:
 class MarketOrderPositionCloseout:
     instrument: str
     units: Decimal
+
+
+# https://developer.oanda.com/rest-live-v20/transaction-df/#TradeOpen
+@dataclass
+class TradeOpen:
+    trade_id: str
+    units: Decimal
+    price: Decimal
+    # guaranteedExecutionFee: Decimal
+    # quoteGuaranteedExecutionFee: Decimal
+    half_spread_cost: Decimal
+    initial_margin_required: Decimal
+    client_extensions: Optional[ClientExtensions] = None
+
+
+def parse_trade_open(data: dict) -> TradeOpen:
+    return TradeOpen(
+        trade_id=data["tradeID"],
+        units=Decimal(data["units"]),
+        price=Decimal(data["price"]),
+        half_spread_cost=Decimal(data["halfSpreadCost"]),
+        initial_margin_required=Decimal(data["initialMarginRequired"]),
+    )
+
+
+# https://developer.oanda.com/rest-live-v20/transaction-df/#TradeReduce
+@dataclass
+class TradeReduce:
+    trade_id: str
+    units: Decimal
+    price: Decimal
+    # ...
+
+
+def parse_trade_reduce(data: dict) -> TradeReduce:
+    return TradeReduce(
+        trade_id=data["tradeID"],
+        units=Decimal(data["units"]),
+        price=Decimal(data["price"]),
+    )
 
 
 # cf. https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillTransaction
@@ -184,60 +245,30 @@ def parse_order_cancel_transaction(data: dict) -> OrderCancelTransaction:
     )
 
 
-# https://developer.oanda.com/rest-live-v20/transaction-df/#TradeOpen
-@dataclass
-class TradeOpen:
-    trade_id: str
-    units: Decimal
-    price: Decimal
-    # guaranteedExecutionFee: Decimal
-    # quoteGuaranteedExecutionFee: Decimal
-    half_spread_cost: Decimal
-    initial_margin_required: Decimal
-    client_extensions: Optional[ClientExtensions] = None
-
-
-def parse_trade_open(data: dict) -> TradeOpen:
-    return TradeOpen(
-        trade_id=data["tradeID"],
-        units=Decimal(data["units"]),
-        price=Decimal(data["price"]),
-        half_spread_cost=Decimal(data["halfSpreadCost"]),
-        initial_margin_required=Decimal(data["initialMarginRequired"]),
-    )
-
-
-# https://developer.oanda.com/rest-live-v20/transaction-df/#TradeReduce
-@dataclass
-class TradeReduce:
-    trade_id: str
-    units: Decimal
-    price: Decimal
-    # ...
-
-
-def parse_trade_reduce(data: dict) -> TradeReduce:
-    return TradeReduce(
-        trade_id=data["tradeID"],
-        units=Decimal(data["units"]),
-        price=Decimal(data["price"]),
-    )
-
-
-# https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillTransaction
+# cf. https://developer.oanda.com/rest-live-v20/transaction-df/#OrderFillTransaction
 @dataclass
 class OrderFillTransaction(Transaction):
     order_id: str
+    client_order_id: Optional[str]
     instrument: str
     units: Decimal
-    requested_units: Decimal
-    account_balance: Decimal
-    half_spread_cost: Decimal
+    home_conversion_factors: HomeConversionFactors
+    full_vwap: Decimal
+    full_price: ClientPrice
     reason: OrderFillReason
-    client_order_id: Optional[str] = None
-    trade_opened: Optional[TradeOpen] = None
-    trades_closed: Optional[list[TradeReduce]] = None
-    trade_reduced: Optional[TradeReduce] = None
+    pl: Decimal
+    quote_pl: Decimal
+    financing: Decimal
+    base_financing: Decimal
+    quote_financing: Optional[Decimal]
+    commission: Decimal
+    guaranteed_execution_fee: Decimal
+    quote_guaranteed_execution_fee: Decimal
+    account_balance: Decimal
+    trade_opened: Optional[TradeOpen]
+    trades_closed: Optional[list[TradeReduce]]
+    trade_reduced: Optional[TradeReduce]
+    half_spread_cost: Decimal
 
 
 def parse_order_fill_transaction(data: dict) -> OrderFillTransaction:
@@ -253,13 +284,23 @@ def parse_order_fill_transaction(data: dict) -> OrderFillTransaction:
         client_order_id=data["clientOrderID"] if "clientOrderID" in data else None,
         instrument=data["instrument"],
         units=Decimal(data["units"]),
-        requested_units=Decimal(data["requestedUnits"]),
-        account_balance=Decimal(data["accountBalance"]),
-        half_spread_cost=Decimal(data["halfSpreadCost"]),
+        home_conversion_factors=parse_home_conversion_factors(data["homeConversionFactors"]),
+        full_vwap=Decimal(data["fullVWAP"]),
+        full_price=parse_client_price(data["fullPrice"]),
         reason=OrderFillReason(data["reason"]),
+        pl=Decimal(data["pl"]),
+        quote_pl=Decimal(data["quotePL"]),
+        financing=Decimal(data["financing"]),
+        base_financing=Decimal(data["baseFinancing"]),
+        quote_financing=Decimal(data["quoteFinancing"]) if "quoteFinancing" in data else None,
+        commission=Decimal(data["commission"]),
+        guaranteed_execution_fee=Decimal(data["guaranteedExecutionFee"]),
+        quote_guaranteed_execution_fee=Decimal(data["quoteGuaranteedExecutionFee"]),
+        account_balance=Decimal(data["accountBalance"]),
         trade_opened=parse_trade_open(data["tradeOpened"]) if "tradeOpened" in data else None,
         trades_closed=[parse_trade_reduce(x) for x in data["tradeClosed"]]
         if "tradeClosed" in data
         else None,
         trade_reduced=parse_trade_reduce(data["tradeReduced"]) if "tradeReduced" in data else None,
+        half_spread_cost=Decimal(data["halfSpreadCost"]),
     )

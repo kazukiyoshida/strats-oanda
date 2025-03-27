@@ -10,11 +10,13 @@ from .transaction import (
     LimitOrderTransaction,
     MarketOrderTransaction,
     OrderCancelTransaction,
+    OrderFillTransaction,
     StopLossDetails,
     TakeProfitDetails,
     parse_limit_order_transaction,
     parse_market_order_transaction,
     parse_order_cancel_transaction,
+    parse_order_fill_transaction,
 )
 
 
@@ -44,7 +46,7 @@ class OrderState(Enum):
 class MarketOrderRequest:
     instrument: str
     units: Decimal
-    type: OrderType = OrderType.LIMIT
+    type: OrderType = OrderType.MARKET
     time_in_force: TimeInForce = TimeInForce.FOK
     price_bound: Optional[Decimal] = None
     position_fill: OrderPositionFill = OrderPositionFill.DEFAULT
@@ -86,11 +88,13 @@ class CreateOrderResponse:
 @dataclass
 class CreateMarketOrderResponse(CreateOrderResponse):
     order_create_transaction: MarketOrderTransaction
+    order_fill_transaction: OrderFillTransaction
 
 
 def parse_create_market_order_response(data: dict) -> CreateMarketOrderResponse:
     return CreateMarketOrderResponse(
         order_create_transaction=parse_market_order_transaction(data["orderCreateTransaction"]),
+        order_fill_transaction=parse_order_fill_transaction(data["orderFillTransaction"]),
         related_transaction_ids=data["relatedTransactionIDs"],
         last_transaction_id=data["lastTransactionID"],
     )
