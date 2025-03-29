@@ -12,7 +12,7 @@ from typing import Optional
 import aiohttp
 
 from strats_oanda.config import get_config
-from strats_oanda.helper import JSONEncoder, remove_none
+from strats_oanda.helper import JSONEncoder, remove_none, to_camel_case
 from strats_oanda.model import (
     CancelOrderResponse,
     CreateLimitOrderResponse,
@@ -40,7 +40,7 @@ class OrderClient:
         market_order: MarketOrderRequest,
     ) -> Optional[CreateMarketOrderResponse]:
         url = f"{self.config.account_rest_url}/orders"
-        req = remove_none({"order": asdict(market_order)})
+        req = to_camel_case(remove_none({"order": asdict(market_order)}))
         order_data = json.dumps(req, cls=JSONEncoder)
 
         logger.info(f"create market order: {order_data}")
@@ -50,7 +50,7 @@ class OrderClient:
                 async with session.post(url, data=order_data) as res:
                     if res.status == 201:
                         data = await res.json()
-                        logger.info(f"create market order success: {data}")
+                        logger.info("create market order success")
                         try:
                             return parse_create_market_order_response(data)
                         except Exception as e:
@@ -72,7 +72,7 @@ class OrderClient:
         limit_order: LimitOrderRequest,
     ) -> Optional[CreateLimitOrderResponse]:
         url = f"{self.config.account_rest_url}/orders"
-        req = remove_none({"order": asdict(limit_order)})
+        req = to_camel_case(remove_none({"order": asdict(limit_order)}))
         order_data = json.dumps(req, cls=JSONEncoder)
 
         logger.info(f"create limit order: {order_data}")
@@ -81,7 +81,7 @@ class OrderClient:
             async with session.post(url, data=order_data) as res:
                 if res.status == 201:
                     data = await res.json()
-                    logger.info(f"create limit order success: {data}")
+                    logger.info("create limit order success")
                     return parse_create_limit_order_response(data)
                 else:
                     text = await res.text()

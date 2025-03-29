@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.9"
 dependencies = [
     "aiohttp>=3.11.14",
+    "inflection>=0.5.1",
     "pyyaml>=5.4",
     "requests>=2.25.0",
     "strats",
