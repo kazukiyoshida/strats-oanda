@@ -131,6 +131,7 @@ def test_parse_create_market_order_response():
             full_price=ClientPrice(
                 type="PRICE",
                 instrument=None,
+                time=None,
                 timestamp=datetime(2025, 3, 27, 12, 34, 11, 618910, tzinfo=timezone.utc),
                 tradeable=None,
                 bids=[PriceBucket(price=Decimal("150.759"), liquidity="250000")],

@@ -25,7 +25,10 @@ def parse_price_bucket(data: dict) -> PriceBucket:
 class ClientPrice:
     type: str
     instrument: Optional[str]
-    timestamp: datetime
+    # BUG: pricing stream API では time が返されるが、
+    # transaction stream API の子要素では timestamp が返される.
+    time: Optional[datetime]
+    timestamp: Optional[datetime]
     tradeable: Optional[bool]
     bids: list[PriceBucket]
     asks: list[PriceBucket]
@@ -37,7 +40,8 @@ def parse_client_price(data: dict) -> ClientPrice:
     return ClientPrice(
         type=data["type"] if "type" in data else "PRICE",
         instrument=data["instrument"] if "instrument" in data else None,
-        timestamp=parse_time(data["timestamp"]),
+        time=parse_time(data["time"]) if "time" in data else None,
+        timestamp=parse_time(data["timestamp"]) if "timestamp" in data else None,
         tradeable=data["tradeable"] if "tradeable" in data else None,
         bids=[parse_price_bucket(x) for x in data["bids"]],
         asks=[parse_price_bucket(x) for x in data["asks"]],

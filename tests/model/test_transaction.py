@@ -85,16 +85,8 @@ def test_parse_order_fill_transaction():
         full_price=ClientPrice(
             type="PRICE",
             instrument=None,
-            timestamp=datetime(
-                2025,
-                3,
-                26,
-                13,
-                50,
-                53,
-                182325,
-                tzinfo=timezone.utc,
-            ),
+            time=None,
+            timestamp=datetime(2025, 3, 26, 13, 50, 53, 182325, tzinfo=timezone.utc),
             tradeable=None,
             bids=[
                 PriceBucket(
