@@ -1,1 +1,1 @@
-from .pricing import client_price_to_prices as client_price_to_prices
+from .pricing import client_price_to_prices_data as client_price_to_prices_data
