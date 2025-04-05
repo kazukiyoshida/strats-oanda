@@ -12,11 +12,8 @@ dependencies = [
     "inflection>=0.5.1",
     "pyyaml>=5.4",
     "requests>=2.25.0",
-    "strats",
+    "strats>=0.1.1",
 ]
-
-[tool.uv.sources]
-strats = { path = "../strats", editable = true }
 
 [build-system]
 requires = ["hatchling"]
@@ -54,14 +51,14 @@ envlist = lint, mypy, py39, py310, py311, py312
 [testenv]
 deps =
     pytest
-    ../strats
+    strats
 commands =
     pytest tests -sv
 
 [testenv:lint]
 deps =
     ruff
-    ../strats
+    strats
 commands =
     ruff check --fix
     ruff format
@@ -71,6 +68,6 @@ deps =
     mypy
     types-requests
     types-PyYAML
-    ../strats
+    strats
 commands = mypy src tests
 """
