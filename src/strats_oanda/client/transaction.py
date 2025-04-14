@@ -28,6 +28,8 @@ class TransactionClient(StreamClient):
         self.config = get_config()
 
     async def stream(self, stop_event: asyncio.Event) -> AsyncGenerator[Transaction]:
+        logger.info("start OANDA /transactions/stream API")
+
         url = f"{self.config.account_streaming_url}/transactions/stream"
         headers = {
             "Authorization": f"Bearer {self.config.token}",
@@ -38,19 +40,33 @@ class TransactionClient(StreamClient):
                 content_iter = resp.content.__aiter__()
 
                 while not stop_event.is_set():
-                    next_line_task = asyncio.create_task(content_iter.__anext__())
-                    stop_task = asyncio.create_task(stop_event.wait())
+                    next_line_task = asyncio.create_task(
+                        content_iter.__anext__(),
+                        name="transaction-client-next-line-task",
+                    )
+                    stop_task = asyncio.create_task(
+                        stop_event.wait(),
+                        name="transaction-client-stop-task",
+                    )
 
                     done, pending = await asyncio.wait(
                         [next_line_task, stop_task],
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
-                    # 不必要になった一時的な task は終了
                     for task in pending:
                         task.cancel()
+                        # In order to handle the following error msg,
+                        # await task and catch an exception
+                        # > Task exception was never retrieved
+                        # > aiohttp.client_exceptions.ClientConnectionError: Connection closed
+                        try:
+                            await task
+                        except Exception as e:
+                            logger.error(f"cancelled task raised: {e}")
 
                     if stop_task in done:
+                        logger.info("OANDA /transactions/stream API stopped")
                         break
 
                     if next_line_task in done:

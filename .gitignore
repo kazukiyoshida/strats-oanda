@@ -10,6 +10,7 @@ dist
 site
 .coverage*
 coverage.xml
+.tox
 
 .DS_Store
 
