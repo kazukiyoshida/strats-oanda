@@ -27,56 +27,23 @@ class TransactionClient(StreamClient):
     def __init__(self):
         self.config = get_config()
 
-    async def stream(self, stop_event: asyncio.Event) -> AsyncGenerator[Transaction]:
-        logger.info("start OANDA /transactions/stream API")
+    async def stream(self) -> AsyncGenerator[Transaction]:
+        try:
+            logger.info("TransactionClient start")
 
-        url = f"{self.config.account_streaming_url}/transactions/stream"
-        headers = {
-            "Authorization": f"Bearer {self.config.token}",
-        }
+            url = f"{self.config.account_streaming_url}/transactions/stream"
+            headers = {
+                "Authorization": f"Bearer {self.config.token}",
+            }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers) as resp:
-                content_iter = resp.content.__aiter__()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as resp:
+                    if resp.status != 200:
+                        raise RuntimeError(f"Failed to connect: status={resp.status}")
 
-                while not stop_event.is_set():
-                    next_line_task = asyncio.create_task(
-                        content_iter.__anext__(),
-                        name="transaction-client-next-line-task",
-                    )
-                    stop_task = asyncio.create_task(
-                        stop_event.wait(),
-                        name="transaction-client-stop-task",
-                    )
-
-                    done, pending = await asyncio.wait(
-                        [next_line_task, stop_task],
-                        return_when=asyncio.FIRST_COMPLETED,
-                    )
-
-                    for task in pending:
-                        task.cancel()
-                        # In order to handle the following error msg,
-                        # await task and catch an exception
-                        # > Task exception was never retrieved
-                        # > aiohttp.client_exceptions.ClientConnectionError: Connection closed
-                        try:
-                            await task
-                        except Exception as e:
-                            logger.error(f"cancelled task raised: {e}")
-
-                    if stop_task in done:
-                        logger.info("OANDA /transactions/stream API stopped")
-                        break
-
-                    if next_line_task in done:
-                        try:
-                            line_bytes = next_line_task.result()
-                        except (StopAsyncIteration, asyncio.CancelledError) as e:
-                            logger.error(f"async iteration stopped or canceled. {e}")
-                            break
-
+                    async for line_bytes in resp.content:
                         line = line_bytes.decode("utf-8").strip()
+
                         if not line or "HEARTBEAT" in line:
                             continue
 
@@ -99,7 +66,13 @@ class TransactionClient(StreamClient):
 
                             if tx is not None:
                                 yield tx
-
                         except Exception as e:
-                            logger.error(f"failed to parse message. err={e}, line={line}")
+                            logger.error(f"failed to parse message. {e}, {line=}")
                             continue
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.error(f"Unhandled exception in TransactionClient: {e}")
+        finally:
+            logger.info("TransactionClient stopped")

@@ -24,64 +24,38 @@ class PricingStreamClient(StreamClient):
         self.config = get_config()
         self.instruments = instruments
 
-    async def stream(self, stop_event: asyncio.Event) -> AsyncGenerator[ClientPrice]:
-        logger.info("start OANDA /pricing/stream API")
+    async def stream(self) -> AsyncGenerator[ClientPrice]:
+        try:
+            logger.info("PricingStreamClient start")
 
-        url = f"{self.config.account_streaming_url}/pricing/stream"
-        params = {"instruments": ",".join(self.instruments)}
-        headers = {
-            "Authorization": f"Bearer {self.config.token}",
-            "Accept-Datetime-Format": "RFC3339",
-        }
+            url = f"{self.config.account_streaming_url}/pricing/stream"
+            params = {"instruments": ",".join(self.instruments)}
+            headers = {
+                "Authorization": f"Bearer {self.config.token}",
+                "Accept-Datetime-Format": "RFC3339",
+            }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as resp:
-                content_iter = resp.content.__aiter__()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as resp:
+                    if resp.status != 200:
+                        raise RuntimeError(f"failed to connect: status={resp.status}")
 
-                while not stop_event.is_set():
-                    next_line_task = asyncio.create_task(
-                        content_iter.__anext__(),
-                        name="pricing-stream-client-next-line-task",
-                    )
-                    stop_task = asyncio.create_task(
-                        stop_event.wait(),
-                        name="pricing-stream-client-stop-task",
-                    )
+                    async for line_bytes in resp.content:
+                        line = line_bytes.decode("utf-8")
 
-                    done, pending = await asyncio.wait(
-                        [next_line_task, stop_task],
-                        return_when=asyncio.FIRST_COMPLETED,
-                    )
-
-                    for task in pending:
-                        task.cancel()
-                        # In order to handle the following error msg,
-                        # await task and catch an exception
-                        # > Task exception was never retrieved
-                        # > aiohttp.client_exceptions.ClientConnectionError: Connection closed
-                        try:
-                            await task
-                        except Exception as e:
-                            logger.error(f"cancelled task raised: {e}")
-
-                    if stop_task in done:
-                        logger.info("OANDA /pricing/stream API stopped")
-                        break
-
-                    if next_line_task in done:
-                        try:
-                            line_bytes = next_line_task.result()
-                        except (StopAsyncIteration, asyncio.CancelledError) as e:
-                            logger.error(f"async iteration stopped or canceled. {e}")
-                            break
-
-                        line = line_bytes.decode("utf-8").strip()
                         if not line or "HEARTBEAT" in line:
                             continue
 
                         try:
-                            data = json.loads(line)
-                            yield parse_client_price(data)
+                            msg = json.loads(line)
+                            yield parse_client_price(msg)
                         except Exception as e:
-                            logger.error(f"failed to parse message. err={e}, line={line}")
+                            logger.error(f"failed to parse message: {e}, {line=}")
                             continue
+
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.error(f"Unhandled exception in PricingStreamClient: {e}")
+        finally:
+            logger.info("PricingStreamClient stopped")
