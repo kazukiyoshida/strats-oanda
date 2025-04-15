@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+Released 2025-04-15
+
+- Use cancel method instead of stop event
+
 ## 0.1.1
 
 Released 2025-04-05
