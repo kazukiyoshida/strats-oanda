@@ -45,8 +45,9 @@ class PricingStreamClient(StreamClient):
                     "Authorization": f"Bearer {self.config.token}",
                     "Accept-Datetime-Format": "RFC3339",
                 }
+                timeout = aiohttp.ClientTimeout(total=60 * 60 * 24)
 
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.get(url, headers=headers, params=params) as resp:
                         if resp.status != 200:
                             raise RuntimeError(f"Failed to connect: status={resp.status}")

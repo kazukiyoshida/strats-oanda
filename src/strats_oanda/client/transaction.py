@@ -46,8 +46,9 @@ class TransactionClient(StreamClient):
                 headers = {
                     "Authorization": f"Bearer {self.config.token}",
                 }
+                timeout = aiohttp.ClientTimeout(total=60 * 60 * 24)
 
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.get(url, headers=headers) as resp:
                         if resp.status != 200:
                             raise RuntimeError(f"Failed to connect: status={resp.status}")
