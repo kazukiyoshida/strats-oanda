@@ -52,7 +52,7 @@ class PricingStreamClient(StreamClient):
                         if resp.status != 200:
                             raise RuntimeError(f"Failed to connect: status={resp.status}")
 
-                        logger.info("{self.name} Connected to OANDA pricing stream")
+                        logger.info(f"{self.name} Connected to OANDA pricing stream")
                         attempt = 0  # reset retry count on success
 
                         async for line_bytes in resp.content:
