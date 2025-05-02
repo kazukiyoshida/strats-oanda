@@ -29,7 +29,7 @@ class PricingStreamClient(StreamClient):
         self.config = get_config()
         self.instruments = instruments
 
-    def set_name(self, name: str):
+    def prepare(self, name: str):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[ClientPrice, None]:

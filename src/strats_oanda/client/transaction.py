@@ -32,7 +32,7 @@ class TransactionClient(StreamClient):
     def __init__(self):
         self.config = get_config()
 
-    def set_name(self, name: str):
+    def prepare(self, name: str):
         self.name = name
 
     async def stream(self) -> AsyncGenerator[Transaction, None]:
