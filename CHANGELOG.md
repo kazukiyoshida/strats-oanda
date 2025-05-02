@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3
+
+Released 2025-05-02
+
+- Set timeout in stream API session
+- Re-design OrderClient
+- Add an argument `current_data` for `source_to_data` function
+
 ## 0.1.2
 
 Released 2025-04-15
