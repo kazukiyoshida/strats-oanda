@@ -11,7 +11,7 @@ from collections.abc import AsyncGenerator
 
 import aiohttp
 from aiohttp import ClientConnectionError, ClientPayloadError, ServerDisconnectedError
-from strats.exchange import StreamClient
+from strats.monitor import StreamClient
 
 from strats_oanda.config import get_config
 from strats_oanda.model.pricing import ClientPrice, parse_client_price
@@ -50,7 +50,7 @@ class PricingStreamClient(StreamClient):
                 async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.get(url, headers=headers, params=params) as resp:
                         if resp.status != 200:
-                            raise RuntimeError(f"Failed to connect: status={resp.status}")
+                            raise RuntimeError(f"Failed to create a session: status={resp.status}")
 
                         logger.info(f"{self.name} Connected to OANDA pricing stream")
                         attempt = 0  # reset retry count on success
