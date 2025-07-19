@@ -11,7 +11,7 @@ from collections.abc import AsyncGenerator
 
 import aiohttp
 from aiohttp import ClientConnectionError, ClientPayloadError, ServerDisconnectedError
-from strats.exchange import StreamClient
+from strats.monitor import StreamClient
 
 from strats_oanda.config import get_config
 from strats_oanda.model.pricing import ClientPrice, parse_client_price

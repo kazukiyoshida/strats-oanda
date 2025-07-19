@@ -12,7 +12,7 @@ dependencies = [
     "inflection>=0.5.1",
     "pyyaml>=5.4",
     "requests>=2.25.0",
-    "strats>=0.1.4",
+    "strats>=0.1.7",
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
