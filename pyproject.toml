@@ -1,6 +1,6 @@
 [project]
 name = "strats-oanda"
-version = "0.1.3"
+version = "0.1.4"
 description = "strats-oanda"
 readme = "README.md"
 authors = [
