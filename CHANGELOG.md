@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+Released 2025-07-19
+
+- Bump up `strats` to 0.1.7
+
 ## 0.1.3
 
 Released 2025-05-02
