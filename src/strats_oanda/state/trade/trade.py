@@ -7,6 +7,7 @@ from strats_oanda.client import OrderClient
 from strats_oanda.model import (
     LimitOrderRequest,
     MarketOrderRequest,
+    OrderPositionFill,
 )
 
 
@@ -25,7 +26,8 @@ class LimitOrder:
     id: str
     units: Decimal
     price: Decimal
-    is_entry: bool
+    time: datetime
+    position_fill: OrderPositionFill
     tags: Optional[dict] = None
 
 
@@ -35,7 +37,7 @@ class Trade:
     def __init__(self, order_client: OrderClient):
         self.order_client = order_client
 
-        self.limit_order: dict[str, LimitOrder] = {}
+        self.limit_orders: dict[str, LimitOrder] = {}
         self.transactions: dict[str, Transaction] = {}
 
         # Trade ID
@@ -66,11 +68,30 @@ class Trade:
         self.transactions[tx.id] = transaction
         return transaction
 
-    async def create_limit_order(self, limit_order: LimitOrderRequest) -> LimitOrder:
-        raise NotImplementedError("")
+    async def create_limit_order(
+        self,
+        request: LimitOrderRequest,
+        tags: Optional[dict] = None,
+    ) -> LimitOrder:
+        result = await self.order_client.create_limit_order(request)
+        tx = result.order_create_transaction
+        limit_order = LimitOrder(
+            id=tx.id,
+            units=tx.units,
+            price=tx.price,
+            time=tx.time,
+            position_fill=request.position_fill,
+            tags=tags,
+        )
+        self.limit_orders[tx.id] = limit_order
+        return limit_order
 
     async def cancel_limit_order(self, order_id: str) -> str:
-        raise NotImplementedError("")
+        if order_id not in self.limit_orders:
+            raise ValueError(f"order_id `{order_id}` is not found")
+        await self.order_client.cancel_limit_order(order_id)
+        del self.limit_orders[order_id]
+        return order_id
 
     def notify_execution(self):
         raise NotImplementedError("")
