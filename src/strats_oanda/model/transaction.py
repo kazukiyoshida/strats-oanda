@@ -253,6 +253,7 @@ class OrderFillTransaction(Transaction):
     instrument: str
     units: Decimal
     home_conversion_factors: HomeConversionFactors
+    # Full Volume Weighted Average Price
     full_vwap: Decimal
     full_price: ClientPrice
     reason: OrderFillReason
