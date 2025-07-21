@@ -13,6 +13,7 @@ INSTRUMENT = "USD_JPY"
 UNITS = Decimal("1")
 
 
+@pytest.mark.skip(reason="THERE ARE API CALLS IN OANDA PRACTICE ENVIRONMENT")
 @pytest.mark.asyncio
 async def test_order_client():
     print("!!! THERE ARE API CALLS IN OANDA PRACTICE ENVIRONMENT !!!")

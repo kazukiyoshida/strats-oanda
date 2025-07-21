@@ -16,6 +16,7 @@ INSTRUMENT = "USD_JPY"
 UNITS = Decimal("1")
 
 
+@pytest.mark.skip(reason="THERE ARE API CALLS IN OANDA PRACTICE ENVIRONMENT")
 @pytest.mark.asyncio
 async def test_create_market_order():
     print("!!! THERE ARE API CALLS IN OANDA PRACTICE ENVIRONMENT !!!")
@@ -58,6 +59,7 @@ async def test_create_market_order():
     await trade.session_close()
 
 
+@pytest.mark.skip(reason="THERE ARE API CALLS IN OANDA PRACTICE ENVIRONMENT")
 @pytest.mark.asyncio
 async def test_create_limit_order():
     print("!!! THERE ARE API CALLS IN OANDA PRACTICE ENVIRONMENT !!!")
