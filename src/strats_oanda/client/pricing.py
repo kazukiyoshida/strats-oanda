@@ -8,6 +8,7 @@ import json
 import logging
 import random
 from collections.abc import AsyncGenerator
+from typing import Optional
 
 import aiohttp
 from aiohttp import ClientConnectionError, ClientPayloadError, ServerDisconnectedError
@@ -20,17 +21,26 @@ logger = logging.getLogger(__name__)
 
 
 class PricingStreamClient(StreamClient):
-    MAX_RETRIES = 5
-    BASE_DELAY = 1.0  # seconds
+    _counter = 0
 
-    def __init__(self, instruments: list[str]):
+    def __init__(
+        self,
+        instruments: list[str],
+        name: Optional[str] = None,
+        max_retries: int = 5,
+        base_delay: float = 1.0,  # seconds
+    ):
         if not isinstance(instruments, list):
             raise ValueError(f"instruments must be list: {instruments}")
+
+        # Update class-specific counter
+        type(self)._counter += 1
+
+        self.name = name or f"{type(self).__name__}_{type(self)._counter}"
         self.config = get_config()
         self.instruments = instruments
-
-    def prepare(self, name: str):
-        self.name = name
+        self.max_retries = max_retries
+        self.base_delay = base_delay
 
     async def stream(self) -> AsyncGenerator[ClientPrice, None]:
         attempt = 0
@@ -92,12 +102,12 @@ class PricingStreamClient(StreamClient):
                 logger.info(f"{self.name} Disconnected from pricing stream")
 
             attempt += 1
-            if attempt > self.MAX_RETRIES:
+            if attempt > self.max_retries:
                 logger.error(
-                    f"{self.name} Max retry attempts exceeded({self.MAX_RETRIES}), giving up."
+                    f"{self.name} Max retry attempts exceeded({self.max_retries}), giving up."
                 )
                 break
 
-            delay = self.BASE_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 1)
+            delay = self.base_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
             logger.info(f"{self.name} Retrying in {delay:.1f} seconds... (attempt {attempt})")
             await asyncio.sleep(delay)

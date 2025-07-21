@@ -26,14 +26,21 @@ logger = logging.getLogger(__name__)
 
 
 class TransactionClient(StreamClient):
-    MAX_RETRIES = 5
-    BASE_DELAY = 1.0  # seconds
+    _counter = 0
 
-    def __init__(self):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        max_retries: int = 5,
+        base_delay: float = 1.0,  # seconds
+    ):
+        # Update class-specific counter
+        type(self)._counter += 1
+
+        self.name = name or f"{type(self).__name__}_{type(self)._counter}"
+        self.max_retries = max_retries
+        self.base_delay = base_delay
         self.config = get_config()
-
-    def prepare(self, name: str):
-        self.name = name
 
     async def stream(self) -> AsyncGenerator[Transaction, None]:
         attempt = 0
@@ -112,12 +119,12 @@ class TransactionClient(StreamClient):
                 logger.info(f"{self.name} Disconnected from transaction stream")
 
             attempt += 1
-            if attempt > self.MAX_RETRIES:
+            if attempt > self.max_retries:
                 logger.error(
-                    f"{self.name} Max retry attempts exceeded({self.MAX_RETRIES}), giving up."
+                    f"{self.name} Max retry attempts exceeded({self.max_retries}), giving up."
                 )
                 break
 
-            delay = self.BASE_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 1)
+            delay = self.base_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
             logger.info(f"{self.name} Retrying in {delay:.1f} seconds... (attempt {attempt})")
             await asyncio.sleep(delay)
