@@ -99,7 +99,7 @@ class OrderClient:
             )
 
         async with self.session.request(method, url, **kwargs) as res:
-            if res.status == 201:
+            if res.status == 201 or res.status == 200:
                 return await res.json()
             else:
                 text = await res.text()

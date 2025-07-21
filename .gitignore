@@ -16,3 +16,5 @@ coverage.xml
 
 uv.lock
 .python-version
+
+.strats_oanda_practice.yaml
