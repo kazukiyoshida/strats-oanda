@@ -87,6 +87,7 @@ commands =
 [testenv:mypy]
 deps =
     mypy
+    pytest
     types-requests
     types-PyYAML
     strats
