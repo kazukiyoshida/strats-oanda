@@ -7,6 +7,7 @@ from strats_oanda.client import OrderClient
 from strats_oanda.model import (
     LimitOrderRequest,
     MarketOrderRequest,
+    OrderFillTransaction,
     OrderPositionFill,
 )
 
@@ -14,6 +15,7 @@ from strats_oanda.model import (
 @dataclass
 class Transaction:
     id: str
+    order_id: str
     units: Decimal
     price: Decimal
     time: datetime
@@ -59,6 +61,7 @@ class Trade:
         tx = result.order_fill_transaction
         transaction = Transaction(
             id=tx.id,
+            order_id=tx.order_id,
             units=tx.units,
             price=tx.full_vwap,
             time=tx.time,
@@ -93,8 +96,29 @@ class Trade:
         del self.limit_orders[order_id]
         return order_id
 
-    def notify_execution(self):
-        raise NotImplementedError("")
+    def notify_execution(self, tx: OrderFillTransaction):
+        if tx.order_id not in self.limit_orders:
+            raise ValueError(f"order_id `{tx.order_id}` is not found")
+
+        limit_order = self.limit_orders[tx.order_id]
+        transaction = Transaction(
+            id=tx.id,
+            order_id=tx.order_id,
+            units=tx.units,
+            price=tx.full_vwap,
+            time=tx.time,
+            pl=tx.pl,
+            tags=limit_order.tags,  # inherit the tags from limit_order
+        )
+        self.transactions[tx.id] = transaction
+
+        # Order filled completely
+        if limit_order.units == tx.units:
+            del self.limit_orders[tx.order_id]
+        # Order filled partialy
+        else:
+            limit_order.units -= tx.units
+            self.limit_orders[tx.order_id] = limit_order
 
     @property
     def total_profit(self) -> Decimal:
