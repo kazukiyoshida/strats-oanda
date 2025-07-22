@@ -134,3 +134,9 @@ class Trade:
         for transaction in self.transactions.values():
             total += transaction.units
         return total
+
+
+def transaction_to_trade(tx, trade):
+    if isinstance(tx, OrderFillTransaction):
+        trade.notify_execution(tx)
+    return trade
