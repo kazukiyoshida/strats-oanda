@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.5
+
+Released 2025-07-22
+
+- Feat
+  - Add Trade and TradeMetrics class
+- Test
+  - Unit tests for OrderClient
+  - Unit tests for Trade
+
 ## 0.1.4
 
 Released 2025-07-19
