@@ -6,6 +6,7 @@ from typing import Optional
 
 import requests
 
+from strats_oanda.config import get_config
 from strats_oanda.helper import format_datetime
 from strats_oanda.logger import logger
 from strats_oanda.model.instrument import (
@@ -38,16 +39,15 @@ def parse_get_candles_response(data) -> GetCandlesResponse:
 
 
 class InstrumentClient:
-    def __init__(self, url, token):
-        self.url = url
-        self.token = token
+    def __init__(self):
+        self.config = get_config()
 
     def get_candles(
         self,
         instrument: str,
         params: GetCandlesQueryParams,
     ) -> Optional[GetCandlesResponse]:
-        url = f"{self.url}/v3/instruments/{instrument}/candles"
+        url = f"{self.config.rest_url}/v3/instruments/{instrument}/candles"
         payload = {
             # PricingComponent
             # Can contain any combination of the characters “M” (midpoint candles)
@@ -64,7 +64,7 @@ class InstrumentClient:
             payload["to"] = format_datetime(params.to_time)
 
         headers = {
-            "Authorization": f"Bearer {self.token}",
+            "Authorization": f"Bearer {self.config.token}",
             "Content-Type": "application/json",
         }
         res = requests.get(url, headers=headers, params=payload)
