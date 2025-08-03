@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -10,6 +11,9 @@ from strats_oanda.model import (
     OrderFillTransaction,
     OrderPositionFill,
 )
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -98,7 +102,8 @@ class Trade:
 
     def notify_execution(self, tx: OrderFillTransaction):
         if tx.order_id not in self.limit_orders:
-            raise ValueError(f"order_id `{tx.order_id}` is not found")
+            logger.warning(f"order_id `{tx.order_id}` is not found")
+            return
 
         limit_order = self.limit_orders[tx.order_id]
         transaction = Transaction(
