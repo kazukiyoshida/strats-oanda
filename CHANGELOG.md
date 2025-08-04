@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.6
+
+Released 2025-08-04
+
+- Fix
+  - Fix InstrumentClient details
+  - Fix logging in Trade state
+
 ## 0.1.5
 
 Released 2025-07-22
